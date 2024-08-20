@@ -69,13 +69,12 @@ pip3 install gdown
 
 # URL untuk verifikasi token
 TOKEN_VERIFICATION_URL="https://api.jsonbin.io/v3/b/66c3fec0acd3cb34a876deea"
-API_KEY="2a$10$1QOpQBdw9pBOiK4x4YnTIeXnWc4pot52hu.6nKnjSFiGdGqKC2vbq"
 
 echo -e "${YELLOW}Masukkan token: ${NC}"
 read -r USER_TOKEN
 
 # Memverifikasi token
-RESPONSE=$(curl -s -H "X-Master-Key: ${API_KEY}" "$TOKEN_VERIFICATION_URL")
+RESPONSE=$(curl -s "$TOKEN_VERIFICATION_URL")
 VALID_TOKEN=$(echo "$RESPONSE" | jq -r .token)
 
 if [ "$USER_TOKEN" != "$VALID_TOKEN" ]; then
