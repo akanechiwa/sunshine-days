@@ -1,0 +1,162 @@
+#!/bin/bash
+
+# Warna dan Font
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+BOLD='\033[1m'
+
+# Instalasi Font Dependencies
+install_fonts() {
+    echo -e "${YELLOW}${BOLD}Menginstal dependensi font...${NC}"
+    sudo apt update > /dev/null 2>&1
+    sudo apt install -y figlet toilet > /dev/null 2>&1
+}
+
+# Meminta user untuk memasukkan token API
+request_token() {
+    echo -e "${CYAN}${BOLD}Masukkan token API JSONbin: ${NC}"
+    read -r INPUT_TOKEN
+}
+
+# Fungsi untuk verifikasi token API dengan mencocokkan input
+verify_api() {
+    show_frame "Verifikasi API"
+    show_loading
+    
+    # Mendapatkan token dari API
+    response=$(curl -s https://api.jsonbin.io/v3/b/66c43101ad19ca34f8987012?meta=false)
+    RETRIEVED_TOKEN=$(echo "$response" | jq -r '.token')
+
+    # Mencocokkan token input dengan token dari API
+    if [ "$INPUT_TOKEN" == "$RETRIEVED_TOKEN" ]; then
+        echo -e "${GREEN}Verifikasi berhasil! Token cocok.${NC}"
+    else
+        echo -e "${RED}Verifikasi gagal! Token tidak cocok.${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk menampilkan bingkai dan keterangan dengan font kecil
+show_frame() {
+    clear
+    echo -e "${PURPLE}${BOLD}##################################################${NC}"
+    echo -e "${CYAN}${BOLD}$1${NC}"
+    echo -e "${PURPLE}${BOLD}##################################################${NC}"
+}
+
+# Fungsi untuk animasi loading dengan persentase dan simbol █ serta ▒
+show_loading() {
+    echo -ne "${BLUE}${BOLD}Loading... 0% [▒▒▒▒▒▒▒▒▒▒]${NC}\r"
+    for i in {1..100}; do
+        sleep 0.05
+        filled=$((i / 10))
+        unfilled=$((10 - filled))
+        PROGRESS_BAR=$(printf '█%.0s' $(seq 1 $filled))$(printf '▒%.0s' $(seq 1 $unfilled))
+        echo -ne "${BLUE}${BOLD}Loading... $i% [${PROGRESS_BAR}]${NC}\r"
+    done
+    echo -ne "\n"
+}
+
+# Menjalankan proses instalasi dengan bingkai dan animasi
+install_theme() {
+    verify_api
+
+    show_frame "Mengunduh Node.js setup script"
+    show_loading
+    curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - > /dev/null 2>&1
+
+    show_frame "Menginstal Node.js"
+    show_loading
+    sudo apt install -y nodejs > /dev/null 2>&1
+
+    show_frame "Menginstal Yarn secara global"
+    show_loading
+    sudo npm install -g yarn > /dev/null 2>&1
+
+    show_frame "Menginstal dependensi Yarn"
+    cd /var/www/pterodactyl || exit
+    show_loading
+    yarn > /dev/null 2>&1
+
+    show_frame "Menambahkan react-feather"
+    show_loading
+    yarn add react-feather > /dev/null 2>&1
+
+    show_frame "Menjalankan php artisan migrate"
+    show_loading
+    php artisan migrate --force > /dev/null 2>&1
+
+    show_frame "Membangun produksi dengan Yarn"
+    show_loading
+    yarn build:production > /dev/null 2>&1
+
+    show_frame "Membersihkan tampilan PHP Artisan"
+    show_loading
+    php artisan view:clear > /dev/null 2>&1
+
+    show_frame "Instalasi Tema Selesai!"
+}
+
+# Fungsi untuk mengganti placeholder pada tema Enigma
+replace_placeholders_enigma() {
+    show_frame "Mengganti placeholder pada tema Enigma"
+    show_loading
+    sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+}
+
+# Fungsi utama untuk instalasi tema
+main() {
+    install_fonts
+    request_token
+
+    show_frame "Pilih Tema untuk Diinstall"
+    echo -e "${YELLOW}${BOLD}1. Stellar${NC}"
+    echo -e "${YELLOW}${BOLD}2. Enigma${NC}"
+    echo -e "${YELLOW}${BOLD}Masukkan pilihan (1 atau 2): ${NC}"
+    read -r THEME_CHOICE
+
+    case "$THEME_CHOICE" in
+        1)
+            show_frame "Mengunduh dan Menginstal Tema Stellar"
+            show_loading
+            gdown https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c -O stellar.zip
+            sudo unzip -o stellar.zip -d /root/pterodactyl
+            sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+            install_theme
+            ;;
+        2)
+            show_frame "Mengunduh dan Menginstal Tema Enigma"
+            show_loading
+            gdown https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH -O enigma.zip
+            sudo unzip -o enigma.zip -d /root/pterodactyl
+            sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+
+            show_frame "Masukkan Placeholder"
+            echo -e "${CYAN}${BOLD}Masukkan link untuk 'LINK_BC_BOT': ${NC}"
+            read -r LINK_BC_BOT
+            echo -e "${CYAN}${BOLD}Masukkan nama untuk 'NAMA_OWNER_PANEL': ${NC}"
+            read -r NAMA_OWNER_PANEL
+            echo -e "${CYAN}${BOLD}Masukkan link untuk 'LINK_GC_INFO': ${NC}"
+            read -r LINK_GC_INFO
+            echo -e "${CYAN}${BOLD}Masukkan link untuk 'LINKTREE_KALIAN': ${NC}"
+            read -r LINKTREE_KALIAN
+            
+            replace_placeholders_enigma
+            install_theme
+            ;;
+        *)
+            show_frame "Pilihan tidak valid, keluar dari skrip."
+            exit 1
+            ;;
+    esac
+}
+
+main
