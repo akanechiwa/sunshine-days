@@ -26,41 +26,52 @@ set -e
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Tampilan awal
-echo -e "#################################################"
-echo -e "#                                               #"
-echo -e "# Project 'pterodactyl-theme-installer'         #"
-echo -e "#                                               #"
-echo -e "# Copyright (C) 2024, @akane_chiwa,             #"
-echo -e "# akanechiwa.ch@gmail.com                       #"
-echo -e "#                                               #"
-echo -e "# This program is free software: you can        #"
-echo -e "# redistribute it and/or modify it under the    #"
-echo -e "# terms of the GNU General Public License       #"
-echo -e "# as published by the Free Software Foundation, #"
-echo -e "# either version 3 of the License, or (at       #"
-echo -e "# your option) any later version.               #"
-echo -e "#                                               #"
-echo -e "# This program is distributed in the hope       #"
-echo -e "# that it will be useful, but WITHOUT ANY       #"
-echo -e "# WARRANTY; without even the implied warranty   #"
-echo -e "# of MERCHANTABILITY or FITNESS FOR A           #"
-echo -e "# PARTICULAR PURPOSE.  See the GNU General      #"
-echo -e "# Public License for more details.              #"
-echo -e "#                                               #"
-echo -e "# You should have received a copy of the GNU    #"
-echo -e "# General Public License along with this        #"
-echo -e "# program.  If not, see <https://www.gnu.org    #"
-echo -e "# /licenses/>.                                  #"
-echo -e "#                                               #"
-echo -e "# This script is not associated with the        #"
-echo -e "# official Pterodactyl Project.                 #"
-echo -e "# https://github.com/aiprojectchiwa/            #"
-echo -e "# pterodactylthemeautoinstaller                 #"
-echo -e "#                                               #"
-echo -e "#################################################"
+# Instalasi figlet jika belum ada
+if ! command -v figlet &> /dev/null; then
+  echo -e "${CYAN}Menginstall figlet...${NC}"
+  sudo apt install -y figlet
+fi
+
+# Tampilan awal dengan bingkai warna-warni
+clear
+figlet -f slant "Pterodactyl Theme Installer"
+echo -e "${BLUE}#################################################${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}# Project 'pterodactyl-theme-installer'         #${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}# Copyright (C) 2024, @akane_chiwa,             #${NC}"
+echo -e "${BLUE}# akane_chiwa@gmail.com                       #${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}# This program is free software: you can        #${NC}"
+echo -e "${BLUE}# redistribute it and/or modify it under the    #${NC}"
+echo -e "${BLUE}# terms of the GNU General Public License       #${NC}"
+echo -e "${BLUE}# as published by the Free Software Foundation, #${NC}"
+echo -e "${BLUE}# either version 3 of the License, or (at       #${NC}"
+echo -e "${BLUE}# your option) any later version.               #${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}# This program is distributed in the hope       #${NC}"
+echo -e "${BLUE}# that it will be useful, but WITHOUT ANY       #${NC}"
+echo -e "${BLUE}# WARRANTY; without even the implied warranty   #${NC}"
+echo -e "${BLUE}# of MERCHANTABILITY or FITNESS FOR A           #${NC}"
+echo -e "${BLUE}# PARTICULAR PURPOSE.  See the GNU General      #${NC}"
+echo -e "${BLUE}# Public License for more details.              #${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}# You should have received a copy of the GNU    #${NC}"
+echo -e "${BLUE}# General Public License along with this        #${NC}"
+echo -e "${BLUE}# program.  If not, see <https://www.gnu.org    #${NC}"
+echo -e "${BLUE}# /licenses/>.                                  #${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}# This script is not associated with the        #${NC}"
+echo -e "${BLUE}# official Pterodactyl Project.                 #${NC}"
+echo -e "${BLUE}# https://github.com/aiprojectchiwa/            #${NC}"
+echo -e "${BLUE}# pterodactylthemeautoinstaller                 #${NC}"
+echo -e "${BLUE}#                                               #${NC}"
+echo -e "${BLUE}#################################################${NC}"
 
 # Install dependensi yang dibutuhkan
 sudo apt update
@@ -94,11 +105,16 @@ else
   done
 fi
 
-# Menampilkan menu
-echo -e "${YELLOW}Pilih opsi:${NC}"
-echo "1. Install tema"
-echo "2. Uninstall tema"
-echo -e "${YELLOW}Masukkan pilihan (1 atau 2): ${NC}"
+# Menampilkan menu dengan animasi
+show_menu() {
+  clear
+  figlet -f slant "Pilih Opsi"
+  echo -e "${CYAN}1. Install tema${NC}"
+  echo -e "${CYAN}2. Uninstall tema${NC}"
+  echo -e "${YELLOW}Masukkan pilihan (1 atau 2): ${NC}"
+}
+
+show_menu
 read -r MENU_CHOICE
 
 # File untuk menyimpan nama snapshot
