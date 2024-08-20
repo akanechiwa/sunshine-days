@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 #########################################################################
@@ -63,23 +62,27 @@ echo -e "# pterodactylthemeautoinstaller                 #"
 echo -e "#                                               #"
 echo -e "#################################################"
 
-# Install jq dan gdown
+# Install dependensi yang dibutuhkan
 sudo apt update
-sudo apt install -y jq gdown
+sudo apt install -y jq python3-pip
+pip3 install gdown
 
-chiwa=$(echo -e "\x68\x74\x74\x70\x73\x3a\x2f\x2f\x67\x65\x74\x70\x61\x6e\x74\x72\x79\x2e\x63\x6c\x6f\x75\x64\x2f\x61\x70\x69\x76\x31\x2f\x70\x61\x6e\x74\x72\x79\x2f\x63\x34\x61\x37\x64\x31\x31\x33\x2d\x38\x35\x66\x65\x2d\x34\x38\x63\x37\x2d\x61\x36\x30\x61\x2d\x36\x39\x34\x39\x64\x39\x34\x36\x66\x37\x63\x30\x2f\x62\x61\x73\x6b\x65\x74\x2f\x74\x68\x65\x6d\x65\x74\x6f\x6b\x65\x6e")
+# URL untuk verifikasi token
+TOKEN_VERIFICATION_URL="https://api.jsonbin.io/v3/b/66c3fec0acd3cb34a876deea"
+API_KEY="2a$10$1QOpQBdw9pBOiK4x4YnTIeXnWc4pot52hu.6nKnjSFiGdGqKC2vbq"
 
-chiw=$(curl -s "$chiwa" | jq -r .chiwa)
-
-echo -e "${YELLOW}Tokennya apaa hayyooooo~~~~~: ${NC}"
+echo -e "${YELLOW}Masukkan token: ${NC}"
 read USER_TOKEN
 
 # Memverifikasi token
-if [ "$USER_TOKEN" != "$chiw" ]; then
-  echo -e "${RED}Yahhhh,tokennya salaahhh, papayyy~~~~~${NC}"
+RESPONSE=$(curl -s -H "X-Master-Key: ${API_KEY}" "$TOKEN_VERIFICATION_URL")
+VALID_TOKEN=$(echo "$RESPONSE" | jq -r .token)
+
+if [ "$USER_TOKEN" != "$VALID_TOKEN" ]; then
+  echo -e "${RED}Token tidak valid.${NC}"
   exit 1
 else
-  echo -e "${GREEN}Yeyyy tokennya bener >_< Irasheimase~~~~~${NC}"
+  echo -e "${GREEN}Token valid. Melanjutkan...${NC}"
   echo -e "${YELLOW}Loading yah kak, script by @akane_chiwa...${NC}"
   for i in {1..10}; do
     case $((i % 4)) in
@@ -113,7 +116,6 @@ install_tema() {
   echo -e "${YELLOW}Apakah Anda ingin membuat snapshot Timeshift untuk memungkinkan uninstall di kemudian hari? (y/n): ${NC}"
   read CREATE_SNAPSHOT
   if [ "$CREATE_SNAPSHOT" == "y" ]; then
-    sudo apt update
     sudo apt install -y timeshift
 
     # Membuat snapshot
@@ -133,11 +135,11 @@ install_tema() {
 
   case "$THEME_CHOICE" in
     1)
-      gdown --id 1brBpgLaTDeg0HIKEGDYnploTiemBxI_c -O stellar.zip
+      gdown https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c -O stellar.zip
       sudo unzip -o stellar.zip
       ;;
     2)
-      gdown --id 1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH -O enigma.zip
+      gdown https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH -O enigma.zip
       sudo unzip -o enigma.zip
       ;;
     *)
@@ -146,8 +148,8 @@ install_tema() {
       ;;
   esac
 
+  # Menjalankan instalasi tema
   if [ "$THEME_CHOICE" -eq 2 ]; then
-    # Menanyakan informasi kepada pengguna untuk tema Enigma
     echo -e "${YELLOW}Masukkan link untuk 'LINK_BC_BOT': ${NC}"
     read LINK_BC_BOT
     echo -e "${YELLOW}Masukkan nama untuk 'NAMA_OWNER_PANEL': ${NC}"
@@ -157,7 +159,6 @@ install_tema() {
     echo -e "${YELLOW}Masukkan link untuk 'LINKTREE_KALIAN': ${NC}"
     read LINKTREE_KALIAN
 
-    # Mengganti placeholder dengan nilai dari pengguna
     sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
     sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
     sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
@@ -177,20 +178,26 @@ install_tema() {
 
 # Fungsi untuk uninstall tema
 uninstall_tema() {
-  # Mengembalikan dari snapshot
-  if [ -f "$SNAPSHOT_FILE" ]; then
-    SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
-    sudo timeshift --restore --snapshot "$SNAPSHOT_NUM" --target /
-    sudo rm -f "$SNAPSHOT_FILE"
-    echo -e "${GREEN}Tema berhasil dihapus dan sistem dipulihkan.${NC}"
-  else
-    echo -e "${RED}Snapshot tidak ditemukan atau tidak ada yang dibuat.${NC}"
+  if [ ! -f "$SNAPSHOT_FILE" ]; then
+    echo -e "${RED}Snapshot tidak ditemukan. Tidak dapat melakukan uninstall.${NC}"
     exit 1
   fi
+
+  SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
+  sudo timeshift --restore --snapshot "$SNAPSHOT_NUM" --target /
+  echo -e "${GREEN}Tema berhasil diuninstall.${NC}"
 }
 
+# Menjalankan pilihan dari menu
 case "$MENU_CHOICE" in
-  1) install_tema ;;
-  2) uninstall_tema ;;
-  *) echo -e "${RED}Pilihan tidak valid.${NC}" ;;
+  1)
+    install_tema
+    ;;
+  2)
+    uninstall_tema
+    ;;
+  *)
+    echo -e "${RED}Pilihan tidak valid, keluar dari skrip.${NC}"
+    exit 1
+    ;;
 esac
