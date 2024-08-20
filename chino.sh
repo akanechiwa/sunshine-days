@@ -64,7 +64,21 @@ echo -e "#################################################"
 
 # Install dependencies
 sudo apt update
-sudo apt install -y jq unzip wget curl gdown
+sudo apt install -y jq unzip wget curl
+
+# Install Python and pip if not installed
+if ! command -v python3 &> /dev/null; then
+  echo -e "${YELLOW}Python tidak ditemukan, menginstal Python...${NC}"
+  sudo apt install -y python3
+fi
+
+if ! command -v pip3 &> /dev/null; then
+  echo -e "${YELLOW}pip tidak ditemukan, menginstal pip...${NC}"
+  sudo apt install -y python3-pip
+fi
+
+# Install gdown
+pip3 install gdown
 
 # Verifikasi token
 TOKEN_URL="https://api.jsonbin.io/v3/b/66c3fec0acd3cb34a876deea"
@@ -174,33 +188,22 @@ install_tema() {
   cd /var/www/pterodactyl
   sudo yarn install --production
   sudo chown -R www-data:www-data /var/www/pterodactyl
-  sudo chmod -R 755 /var/www/pterodactyl
-  sudo systemctl restart pterodactyl
+  sudo chmod -R 755 /var/www
 }
 
-# Fungsi untuk menghapus tema
+# Fungsi untuk uninstall tema
 uninstall_tema() {
-  if [ ! -d /var/www/pterodactyl ]; then
-    echo -e "${RED}Tema tidak ditemukan di /var/www/pterodactyl.${NC}"
-    exit 1
+  # Restore snapshot jika ada
+  if [ -f "$SNAPSHOT_FILE" ]; then
+    SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
+    sudo timeshift --restore --snapshot "$SNAPSHOT_NUM" --yes
+    echo -e "${GREEN}Tema berhasil diuninstall dan sistem dikembalikan ke keadaan sebelum instalasi.${NC}"
+  else
+    echo -e "${RED}Tidak ada snapshot yang ditemukan untuk dikembalikan.${NC}"
   fi
-
-  # Memastikan ada file snapshot
-  if [ ! -f "$SNAPSHOT_FILE" ]; then
-    echo -e "${RED}Tidak ada snapshot yang ditemukan. Anda harus membuat snapshot terlebih dahulu.${NC}"
-    exit 1
-  fi
-
-  # Menghapus tema
-  sudo rm -rf /var/www/pterodactyl
-  echo -e "${YELLOW}Mengembalikan snapshot Timeshift...${NC}"
-  SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
-  sudo timeshift --restore --snapshot "$SNAPSHOT_NUM" --yes
-
-  echo -e "${GREEN}Tema berhasil dihapus dan sistem dikembalikan ke keadaan sebelum instalasi.${NC}"
 }
 
-# Menjalankan opsi berdasarkan input
+# Menjalankan opsi berdasarkan input pengguna
 case "$MENU_CHOICE" in
   1)
     install_tema
@@ -209,7 +212,7 @@ case "$MENU_CHOICE" in
     uninstall_tema
     ;;
   *)
-    echo -e "${RED}Pilihan tidak valid. Silahkan pilih 1 atau 2.${NC}"
+    echo -e "${RED}Pilihan tidak valid, keluar dari skrip.${NC}"
     exit 1
     ;;
 esac
