@@ -1,0 +1,207 @@
+#!/bin/bash
+
+#########################################################################
+# Project 'pterodactyl-theme-installer' | © 2023-2024, @akane_chiwa,    #
+# akane_chiwa@gmail.com                                                 #
+#                                                                       #
+# This program is free software: you can redistribute it and/or modify  #
+# it under the terms of the GNU General Public License as published by  #
+# the Free Software Foundation, either version 3 of the License, or     #
+# (at your option) any later version.                                   #
+#                                                                       #
+# This program is distributed in the hope that it will be useful,       #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of        #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         #
+# GNU General Public License for more details.                          #
+#                                                                       #
+# You should have received a copy of the GNU General Public License     #
+# along with this program. If not, see <https://www.gnu.org/licenses/>. #
+#                                                                       #
+# This script is not associated with the official Pterodactyl Project.  #
+# https://github.com/aiprojectchiwa/pterodactylthemeautoinstaller       #
+#########################################################################
+set -e
+
+# Warna
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Fungsi untuk menampilkan bingkai warna-warni
+show_frame() {
+    echo -e "${BLUE}#######################################################${NC}"
+    echo -e "${BLUE}#                                                     #${NC}"
+    echo -e "${BLUE}# ${1} ${NC}"
+    echo -e "${BLUE}#                                                     #${NC}"
+    echo -e "${BLUE}#######################################################${NC}"
+}
+
+# Tampilan awal
+clear
+show_frame "Project 'pterodactyl-theme-installer'"
+echo -e "${YELLOW}Script by @akane_chiwa${NC}"
+sleep 2
+
+# Install dependensi yang dibutuhkan
+clear
+show_frame "Menginstal dependensi..."
+sleep 1
+clear
+echo -e "${YELLOW}Menginstal 'jq' dan 'python3-pip'...${NC}"
+sudo apt-get install -y jq python3-pip > /dev/null 2>&1
+clear
+echo -e "${YELLOW}Menginstal 'gdown'...${NC}"
+pip3 install gdown > /dev/null 2>&1
+
+# URL untuk verifikasi token
+clear
+show_frame "Memverifikasi token..."
+TOKEN_VERIFICATION_URL="https://api.jsonbin.io/v3/b/66c43101ad19ca34f8987012?meta=false"
+
+echo -e "${YELLOW}Masukkan token: ${NC}"
+read -r USER_TOKEN
+
+# Memverifikasi token
+RESPONSE=$(curl -s "$TOKEN_VERIFICATION_URL")
+VALID_TOKEN=$(echo "$RESPONSE" | jq -r .token)
+
+clear
+if [ "$USER_TOKEN" != "$VALID_TOKEN" ]; then
+  show_frame "Token tidak valid. Keluar dari skrip."
+  exit 1
+else
+  show_frame "Token valid. Melanjutkan..."
+  echo -e "${YELLOW}Loading, script by @akane_chiwa...${NC}"
+  for i in {1..10}; do
+    case $((i % 4)) in
+      0) echo -ne "-\r";;
+      1) echo -ne "/\r";;
+      2) echo -ne "|\r";;
+      3) echo -ne "\\\r";;
+    esac
+    sleep 0.3
+  done
+fi
+
+# Menampilkan menu
+clear
+show_frame "Pilih opsi:"
+echo "1. Install tema"
+echo "2. Uninstall tema"
+echo -e "${YELLOW}Masukkan pilihan (1 atau 2): ${NC}"
+read -r MENU_CHOICE
+
+# File untuk menyimpan nama snapshot
+SNAPSHOT_FILE="/var/tmp/chiwa_snapshot_name"
+
+# Fungsi untuk instalasi tema
+install_tema() {
+  clear
+  if [ ! -d /var/www/pterodactyl ]; then
+    show_frame "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  # Meminta konfirmasi untuk membuat snapshot Timeshift
+  show_frame "Apakah Anda ingin membuat snapshot Timeshift? (y/n)"
+  read -r CREATE_SNAPSHOT
+  if [ "$CREATE_SNAPSHOT" == "y" ]; then
+    clear
+    show_frame "Menginstal 'timeshift'..."
+    sudo apt-get install -y timeshift > /dev/null 2>&1
+
+    # Membuat snapshot
+    clear
+    show_frame "Membuat snapshot Timeshift..."
+    sudo timeshift --create --comments "Backup sebelum instalasi tema" --tags D
+
+    # Mendapatkan nomor snapshot terbaru
+    SNAPSHOT_NUM=$(sudo timeshift --list | grep -E "Backup sebelum instalasi tema" | head -1 | awk '{print $1}')
+    echo "$SNAPSHOT_NUM" > "$SNAPSHOT_FILE"
+  fi
+
+  # Memilih tema
+  clear
+  show_frame "Pilih tema untuk diinstall:"
+  echo "1. Stellar"
+  echo "2. Enigma"
+  echo -e "${YELLOW}Masukkan pilihan (1 atau 2): ${NC}"
+  read -r THEME_CHOICE
+
+  clear
+  show_frame "Mengunduh dan menginstal tema..."
+  case "$THEME_CHOICE" in
+    1)
+      gdown https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c -O stellar.zip > /dev/null 2>&1
+      sudo unzip -o stellar.zip > /dev/null 2>&1
+      ;;
+    2)
+      gdown https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH -O enigma.zip > /dev/null 2>&1
+      sudo unzip -o enigma.zip > /dev/null 2>&1
+      ;;
+    *)
+      show_frame "Pilihan tidak valid, keluar dari skrip."
+      exit 1
+      ;;
+  esac
+
+  if [ "$THEME_CHOICE" -eq 2 ]; then
+    clear
+    show_frame "Konfigurasi tema..."
+    echo -e "${YELLOW}Masukkan link untuk 'LINK_BC_BOT': ${NC}"
+    read -r LINK_BC_BOT
+    echo -e "${YELLOW}Masukkan nama untuk 'NAMA_OWNER_PANEL': ${NC}"
+    read -r NAMA_OWNER_PANEL
+    echo -e "${YELLOW}Masukkan link untuk 'LINK_GC_INFO': ${NC}"
+    read -r LINK_GC_INFO
+    echo -e "${YELLOW}Masukkan link untuk 'LINKTREE_KALIAN': ${NC}"
+    read -r LINKTREE_KALIAN
+
+    sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  fi
+
+  clear
+  show_frame "Menjalankan instalasi tema..."
+  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - > /dev/null 2>&1
+  sudo apt-get install -y nodejs > /dev/null 2>&1
+  sudo yarn install > /dev/null 2>&1
+  sudo yarn build:production > /dev/null 2>&1
+  sudo systemctl restart wings
+  sudo systemctl restart pteroq.service
+  sudo systemctl restart nginx
+  show_frame "Instalasi tema berhasil!"
+}
+
+# Fungsi untuk uninstall tema
+uninstall_tema() {
+  clear
+  if [ ! -f "$SNAPSHOT_FILE" ]; then
+    show_frame "Snapshot tidak ditemukan. Tidak dapat melakukan uninstall."
+    exit 1
+  fi
+
+  show_frame "Mengembalikan snapshot Timeshift..."
+  SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
+  sudo timeshift --restore --snapshot "$SNAPSHOT_NUM" --yes > /dev/null 2>&1
+  show_frame "Uninstall berhasil. Panel dikembalikan ke keadaan sebelum instalasi tema."
+}
+
+# Menangani pilihan menu
+case "$MENU_CHOICE" in
+  1)
+    install_tema
+    ;;
+  2)
+    uninstall_tema
+    ;;
+  *)
+    show_frame "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
