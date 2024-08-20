@@ -62,27 +62,20 @@ echo -e "# pterodactylthemeautoinstaller                 #"
 echo -e "#                                               #"
 echo -e "#################################################"
 
-# Install dependensi yang dibutuhkan
+# Install dependencies
 sudo apt update
-sudo apt install -y jq python3-pip
-pip3 install gdown
+sudo apt install -y jq unzip wget curl gdown
 
-# URL untuk verifikasi token
-TOKEN_VERIFICATION_URL="https://api.jsonbin.io/v3/b/66c3fec0acd3cb34a876deea"
+# Verifikasi token
+TOKEN_URL="https://api.jsonbin.io/v3/b/66c3fec0acd3cb34a876deea"
 API_KEY="2a$10$1QOpQBdw9pBOiK4x4YnTIeXnWc4pot52hu.6nKnjSFiGdGqKC2vbq"
+RESPONSE=$(curl -s -H "X-Master-Key: $API_KEY" "$TOKEN_URL")
 
-echo -e "${YELLOW}Masukkan token: ${NC}"
-read USER_TOKEN
-
-# Memverifikasi token
-RESPONSE=$(curl -s -H "X-Master-Key: ${API_KEY}" "$TOKEN_VERIFICATION_URL")
-VALID_TOKEN=$(echo "$RESPONSE" | jq -r .token)
-
-if [ "$USER_TOKEN" != "$VALID_TOKEN" ]; then
-  echo -e "${RED}Token tidak valid.${NC}"
+if [[ "$(echo "$RESPONSE" | jq -r '.token')" != "chiwa" ]]; then
+  echo -e "${RED}Yahhhh, tokennya salaahhh, papayyy~~~~~${NC}"
   exit 1
 else
-  echo -e "${GREEN}Token valid. Melanjutkan...${NC}"
+  echo -e "${GREEN}Yeyyy tokennya bener >_< Irasheimase~~~~~${NC}"
   echo -e "${YELLOW}Loading yah kak, script by @akane_chiwa...${NC}"
   for i in {1..10}; do
     case $((i % 4)) in
@@ -116,6 +109,7 @@ install_tema() {
   echo -e "${YELLOW}Apakah Anda ingin membuat snapshot Timeshift untuk memungkinkan uninstall di kemudian hari? (y/n): ${NC}"
   read CREATE_SNAPSHOT
   if [ "$CREATE_SNAPSHOT" == "y" ]; then
+    sudo apt update
     sudo apt install -y timeshift
 
     # Membuat snapshot
@@ -135,12 +129,10 @@ install_tema() {
 
   case "$THEME_CHOICE" in
     1)
-      gdown https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c -O stellar.zip
-      sudo unzip -o stellar.zip
+      THEME_URL="https://github.com/aiprojectchiwa/pterodactylthemeautoinstaller/raw/main/stellaredited.zip"
       ;;
     2)
-      gdown https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH -O enigma.zip
-      sudo unzip -o enigma.zip
+      THEME_URL="https://github.com/aiprojectchiwa/pterodactylthemeautoinstaller/raw/main/custom_install_enigma.zip"
       ;;
     *)
       echo -e "${RED}Pilihan tidak valid, keluar dari skrip.${NC}"
@@ -148,8 +140,17 @@ install_tema() {
       ;;
   esac
 
-  # Menjalankan instalasi tema
+  # Memastikan tidak ada file atau direktori bernama pterodactyl sebelum mengekstrak
+  if [ -e /root/pterodactyl ]; then
+    sudo rm -rf /root/pterodactyl
+  fi
+
+  # Mengunduh dan mengekstrak tema
+  wget -q "$THEME_URL"
+  sudo unzip -o "$(basename "$THEME_URL")"
+
   if [ "$THEME_CHOICE" -eq 2 ]; then
+    # Menanyakan informasi kepada pengguna untuk tema Enigma
     echo -e "${YELLOW}Masukkan link untuk 'LINK_BC_BOT': ${NC}"
     read LINK_BC_BOT
     echo -e "${YELLOW}Masukkan nama untuk 'NAMA_OWNER_PANEL': ${NC}"
@@ -159,6 +160,7 @@ install_tema() {
     echo -e "${YELLOW}Masukkan link untuk 'LINKTREE_KALIAN': ${NC}"
     read LINKTREE_KALIAN
 
+    # Mengganti placeholder dengan nilai dari pengguna
     sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
     sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
     sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
@@ -168,27 +170,35 @@ install_tema() {
   sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   sudo apt install -y nodejs
-  sudo yarn install
-  sudo yarn build:production
-  sudo systemctl restart wings
-  sudo systemctl restart pteroq.service
-  sudo systemctl restart nginx
-  echo -e "${GREEN}Instalasi tema berhasil.${NC}"
+  sudo npm i -g yarn
+  cd /var/www/pterodactyl
+  sudo yarn install --frozen-lockfile
+  sudo yarn run build:production
+  sudo chown -R www-data:www-data /var/www/pterodactyl
+  sudo systemctl restart pterodactyl
+
+  echo -e "${GREEN}Instalasi selesai. Silahkan cek panel Pterodactyl Anda.${NC}"
 }
 
 # Fungsi untuk uninstall tema
 uninstall_tema() {
-  if [ ! -f "$SNAPSHOT_FILE" ]; then
-    echo -e "${RED}Snapshot tidak ditemukan. Tidak dapat melakukan uninstall.${NC}"
+  if [ ! -d /var/www/pterodactyl ]; then
+    echo -e "${RED}Panel Pterodactyl tidak ditemukan.${NC}"
     exit 1
   fi
 
-  SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
-  sudo timeshift --restore --snapshot "$SNAPSHOT_NUM" --target /
-  echo -e "${GREEN}Tema berhasil diuninstall.${NC}"
+  # Memulihkan snapshot jika ada
+  if [ -f "$SNAPSHOT_FILE" ]; then
+    SNAPSHOT_NUM=$(cat "$SNAPSHOT_FILE")
+    sudo timeshift --restore --snapshot "$SNAPSHOT_NUM"
+    echo -e "${GREEN}Snapshoot telah dipulihkan.${NC}"
+  fi
+
+  sudo rm -rf /var/www/pterodactyl
+  echo -e "${GREEN}Tema telah diuninstall.${NC}"
 }
 
-# Menjalankan pilihan dari menu
+# Menjalankan pilihan pengguna
 case "$MENU_CHOICE" in
   1)
     install_tema
@@ -197,7 +207,6 @@ case "$MENU_CHOICE" in
     uninstall_tema
     ;;
   *)
-    echo -e "${RED}Pilihan tidak valid, keluar dari skrip.${NC}"
-    exit 1
+    echo -e "${RED}Pilihan tidak valid. Silahkan pilih 1 atau 2.${NC}"
     ;;
 esac
