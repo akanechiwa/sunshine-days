@@ -209,12 +209,12 @@ main() {
 
     case "$THEME_CHOICE" in
         1)
-            secure_download "https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c" "/tmp/stellar_theme.tar.bz2"
-            tar -xvjf /tmp/stellar_theme.tar.bz2 -C /var/www/pterodactyl >> "$LOG_FILE" 2>&1
+            secure_download "https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c" "/tmp/stellar_theme.zip"
+            unzip /tmp/stellar_theme.zip -d /var/www/pterodactyl >> "$LOG_FILE" 2>&1
             ;;
         2)
-            secure_download "https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH" "/tmp/enigma_theme.tar.bz2"
-            tar -xvjf /tmp/enigma_theme.tar.bz2 -C /var/www/pterodactyl >> "$LOG_FILE" 2>&1
+            secure_download "https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH" "/tmp/enigma_theme.zip"
+            unzip /tmp/enigma_theme.zip -d /var/www/pterodactyl >> "$LOG_FILE" 2>&1
             replace_placeholders_enigma
             ;;
         *)
@@ -225,6 +225,7 @@ main() {
 
     install_theme
 }
+
 
 # Memblokir Ctrl+C selama eksekusi skrip utama
 block_ctrl_c
