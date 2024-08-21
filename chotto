@@ -1,0 +1,237 @@
+#!/bin/bash
+
+# Warna dan Font
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+BOLD='\033[1m'
+
+# Fungsi Enkripsi dan Dekripsi dengan OpenSSL (AES-256-GCM)
+encrypt_file() {
+    openssl enc -aes-256-gcm -salt -pbkdf2 -iter 100000 -in "$1" -out "$2" -k "$3" -md sha512 -a
+}
+
+decrypt_file() {
+    openssl enc -d -aes-256-gcm -pbkdf2 -iter 100000 -in "$1" -out "$2" -k "$3" -md sha512 -a
+}
+
+# Instalasi Font Dependencies
+install_fonts() {
+    show_frame "Menginstall Font Dependencies"
+    show_loading
+    sudo apt update -y > /dev/null 2>&1
+    sudo apt install -y toilet figlet > /dev/null 2>&1
+}
+
+# Fungsi untuk verifikasi ukuran layar
+verify_screen_size() {
+    local min_width=70
+    local min_height=20
+    local current_width=$(tput cols)
+    local current_height=$(tput lines)
+
+    if [ "$current_width" -lt "$min_width" ] || [ "$current_height" -lt "$min_height" ]; then
+        echo -e "${RED}${BOLD}Layar anda terlalu kecil. Ukuran minimum adalah ${min_width}x${min_height}.${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk menampilkan teks dengan toilet dan memberikan kredit
+show_intro() {
+    clear
+    local width=70  # Lebar bingkai
+    echo -e "${PURPLE}${BOLD}$(printf '%.0s' $(seq 1 $width))${NC}"
+    echo -e "${CYAN}"
+    toilet -f mono12 -F border --metal "  @akane_chiwa" | while IFS= read -r line; do
+        printf "${PURPLE}${BOLD}%s${NC}\n" "$(printf "%-*s" $((width - 2)) "$line")"
+    done
+    echo -e "${PURPLE}${BOLD}$(printf '%.0s' $(seq 1 $width))${NC}"
+    echo -e "${CYAN}${BOLD}pterodactylthemeautoinstaller${NC}"
+    echo -e "${PURPLE}${BOLD}$(printf '%.0s' $(seq 1 $width))${NC}"
+}
+
+# Meminta user untuk memasukkan token API
+request_token() {
+    local width=70
+    echo -e "${PURPLE}${BOLD}$(printf '%.0s' $(seq 1 $width))${NC}"
+    echo -e "${RED}${BOLD}SILAHKAN MASUKKAN TOKEN: ${NC}"
+    read -r INPUT_TOKEN
+    echo -e "${PURPLE}${BOLD}$(printf '%.0s' $(seq 1 $width))${NC}"
+}
+
+# Fungsi untuk verifikasi token API dengan mencocokkan input
+verify_api() {
+    show_frame "VERIFIKASI API"
+    show_loading
+    
+    # Mendapatkan token dari API
+    response=$(curl -s https://api.jsonbin.io/v3/b/66c43101ad19ca34f8987012?meta=false)
+    RETRIEVED_TOKEN=$(echo "$response" | jq -r '.token')
+
+    # Mencocokkan token input dengan token dari API
+    if [ "$INPUT_TOKEN" == "$RETRIEVED_TOKEN" ]; then
+        echo -e "${GREEN}VERIFIKASI BERHASIL TOKEN COCOK.${NC}"
+    else
+        echo -e "${RED}Verifikasi gagal! Token tidak cocok.${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk menampilkan bingkai dan keterangan dengan teks berada di tengah
+show_frame() {
+    clear
+    sleep 0.7  # Penambahan delay 700ms sebelum menampilkan frame
+    local text="$1"
+    local toilet_text=$(toilet -f smblock -F border --width=70 "$text")
+    echo -e "${PURPLE}${BOLD}$toilet_text${NC}"
+}
+
+# Fungsi untuk animasi loading dengan persentase dan simbol █ serta ▒
+show_loading() {
+    echo -ne "${BLUE}${BOLD}Loading... 0% 《$(printf '░%.0s' {1..40})》${NC}\r"
+    for i in {1..100}; do
+        sleep 0.05
+        filled=$((i * 40 / 100))
+        unfilled=$((40 - filled))
+        if [ "$i" -eq 100 ]; then
+            PROGRESS_BAR=$(printf '█%.0s' {1..40})
+        else
+            PROGRESS_BAR=$(printf '█%.0s' $(seq 1 $filled))$(printf '░%.0s' $(seq 1 $unfilled))
+        fi
+        echo -ne "${BLUE}${BOLD}Loading... $i% 《${PROGRESS_BAR}》${NC}\r"
+    done
+    echo -ne "\n"
+}
+
+# Menjalankan proses instalasi dengan bingkai dan animasi
+install_theme() {
+    verify_api
+
+    show_frame "MENDOWNLOAD DEPENDENSI"
+    show_loading
+    curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - > /dev/null 2>&1
+
+    show_frame "MEMERIKSA IZIN"
+    show_loading
+    sudo apt install -y nodejs > /dev/null 2>&1
+
+    show_frame "MENUNGGU RESPON SERVER"
+    show_loading
+    sudo npm install -g yarn > /dev/null 2>&1
+
+    show_frame "MENGINSTALL 1/5"
+    cd /var/www/pterodactyl || exit
+    show_loading
+    yarn > /dev/null 2>&1
+
+    show_frame "MENGINSTALL 2/5"
+    show_loading
+    yarn add react-feather > /dev/null 2>&1
+
+    show_frame "MENGINSTALL 3/5"
+    show_loading
+    php artisan migrate --force > /dev/null 2>&1
+
+    show_frame "MENGINSTALL 4/5"
+    show_loading
+    yarn build:production > /dev/null 2>&1
+
+    show_frame "MEMBERSIHKAN INSTALLASI"
+    show_loading
+    php artisan view:clear > /dev/null 2>&1
+
+    show_frame "Install Tema selesai"
+    credit_chiwa
+}
+
+# Fungsi untuk mengganti placeholder pada tema Enigma
+credit_chiwa() {
+    local border_char=""
+    local border_length=60
+    local text="@akane_chiwa, makasih udah pake, script ini ^_^, ~chiwa"
+
+    clear
+    sleep 0.5
+
+    border=$(printf "%${border_length}s" | tr ' ' "$border_char")
+    echo "$border"
+    toilet -f smblock --filter border "$text"
+    echo "$border"
+}
+
+replace_placeholders_enigma() {
+    show_frame "Mengganti placeholder pada tema Enigma"
+    show_loading
+    sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+    sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+}
+
+# Fungsi untuk mengunduh file dengan enkripsi dan penghapusan otomatis
+secure_download() {
+    local url="$1"
+    local encrypted_file="/tmp/downloaded_file.enc"
+    local decrypted_file="/tmp/downloaded_file.zip"
+
+    curl -sL "$url" | openssl enc -aes-256-gcm -salt -out "$encrypted_file" -k "$INPUT_TOKEN" -md sha512 -a
+    decrypt_file "$encrypted_file" "$decrypted_file" "$INPUT_TOKEN"
+    unzip -o "$decrypted_file" -d /root/pterodactyl
+    rm -f "$encrypted_file" "$decrypted_file"
+}
+
+# Fungsi utama untuk instalasi tema
+main() {
+    sudo apt install toilet -y
+    sudo apt install jq -y > /dev/null 2>&1
+    install_fonts
+    verify_screen_size  # Verifikasi ukuran layar sebelum memulai
+    show_intro
+    request_token  # Meminta token API setelah intro
+    verify_api     # Verifikasi token API setelah user input
+
+    show_frame "Pilih Tema untuk Diinstall"
+    echo -e "${YELLOW}${BOLD}1. Stellar${NC}"
+    echo -e "${YELLOW}${BOLD}2. Enigma${NC}"
+    echo -e "${YELLOW}${BOLD}Masukkan pilihan (1 atau 2): ${NC}"
+    read -r THEME_CHOICE
+
+    case "$THEME_CHOICE" in
+        1)
+            show_frame "mengunduh tema"
+            show_loading
+            secure_download "https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c"
+            sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+            install_theme
+            ;;
+        2)
+            show_frame "verifikasi"
+            show_loading
+            secure_download "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH"
+            sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+
+            show_frame "masukkan input"
+            echo -e "${CYAN}${BOLD}Masukkan link untuk 'LINK_BC_BOT': ${NC}"
+            read -r LINK_BC_BOT
+            echo -e "${CYAN}${BOLD}Masukkan nama untuk 'NAMA_OWNER_PANEL': ${NC}"
+            read -r NAMA_OWNER_PANEL
+            echo -e "${CYAN}${BOLD}Masukkan link untuk 'LINK_GC_INFO': ${NC}"
+            read -r LINK_GC_INFO
+            echo -e "${CYAN}${BOLD}Masukkan link untuk 'LINKTREE_KALIAN': ${NC}"
+            read -r LINKTREE_KALIAN
+            
+            replace_placeholders_enigma
+            install_theme
+            ;;
+        *)
+            show_frame "Pilihan tidak valid, keluar dari skrip."
+            exit 1
+            ;;
+    esac
+}
+
+main
