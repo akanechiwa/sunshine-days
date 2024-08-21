@@ -209,11 +209,11 @@ main() {
 
     case "$THEME_CHOICE" in
         1)
-            secure_download "https://drive.google.com/uc?id=1mxlU_GkvMsYUzAAi2Ny6yDLgfazF4xMf" "/tmp/stellar_theme.tar.bz2"
+            secure_download "https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c" "/tmp/stellar_theme.tar.bz2"
             tar -xvjf /tmp/stellar_theme.tar.bz2 -C /var/www/pterodactyl >> "$LOG_FILE" 2>&1
             ;;
         2)
-            secure_download "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH" "/tmp/enigma_theme.tar.bz2"
+            secure_download "https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH" "/tmp/enigma_theme.tar.bz2"
             tar -xvjf /tmp/enigma_theme.tar.bz2 -C /var/www/pterodactyl >> "$LOG_FILE" 2>&1
             replace_placeholders_enigma
             ;;
