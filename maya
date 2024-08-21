@@ -33,15 +33,11 @@ verify_screen_size() {
 # Fungsi untuk menampilkan teks dengan toilet dan memberikan kredit
 show_intro() {
     clear
-    local width=70  # Lebar bingkai
-    echo -e "${PURPLE}${BOLD}$(printf '#%.0s' $(seq 1 $width))${NC}"
     echo -e "${CYAN}"
-    toilet -f mono12 -F border --metal "  @akane_chiwa" | while IFS= read -r line; do
-        printf "${PURPLE}${BOLD}#%s#${NC}\n" "$(printf "%-*s" $((width - 2)) "$line")"
-    done
-    echo -e "${PURPLE}${BOLD}# pterodactylthemeautoinstakker                             #${NC}"
-    echo -e "${PURPLE}${BOLD}$(printf '#%.0s' $(seq 1 $width))${NC}"
+    toilet -f mono12 --metal "  @akane_chiwa"
+    echo -e "${PURPLE}${BOLD}pterodactylthemeautoinstakker${NC}"
 }
+
 
 # Meminta user untuk memasukkan token API
 request_token() {
