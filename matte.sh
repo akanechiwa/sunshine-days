@@ -12,16 +12,16 @@ BOLD='\033[1m'
 
 # Fungsi Enkripsi dan Dekripsi dengan OpenSSL (AES-256-GCM)
 encrypt_file() {
-    openssl enc -aes-256-gcm -salt -pbkdf2 -iter 100000 -in "$1" -out "$2" -k "$3" -md sha512 -a
+    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -in "$1" -out "$2" -k "$3" -md sha512
 }
 
 decrypt_file() {
-    openssl enc -d -aes-256-gcm -pbkdf2 -iter 100000 -in "$1" -out "$2" -k "$3" -md sha512 -a
+    openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -in "$1" -out "$2" -k "$3" -md sha512
 }
 
 # Instalasi Font Dependencies
 install_fonts() {
-    show_frame "Menginstall Font Dependencies"
+    show_frame "Menginstall Bahan"
     show_loading
     sudo apt update -y > /dev/null 2>&1
     sudo apt install -y toilet figlet > /dev/null 2>&1
