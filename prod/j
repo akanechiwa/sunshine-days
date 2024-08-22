@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -e
+
+sudo apt update
+sudo apt install -y jq python3-pip
+pip3 install gdown
+
+echo "Pilih opsi:"
+echo "1. Install tema"
+echo "2. Uninstall tema"
+read -p "Masukkan pilihan (1 atau 2): " MENU_CHOICE
+
+install_tema() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    echo "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  gdown "https://drive.usercontent.google.com/u/0/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O ptero.zip
+  gdown "https://drive.usercontent.google.com/u/0/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip
+  
+  sudo unzip ptero.zip -d /root
+  sudo unzip enigma.zip -d /root
+
+  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo npm i -g yarn
+  cd /var/www/pterodactyl
+  yarn add react-feather
+  php artisan migrate
+  yes | php artisan migrate
+  yarn build:production
+  php artisan view:clear
+
+  echo "Tema telah terinstall, makaciih udah pake script chiwa ><"
+  exit 0
+}
+
+case "$MENU_CHOICE" in
+  1)
+    install_tema
+    ;;
+  2)
+    echo "Uninstall opsi belum diimplementasikan."
+    exit 1
+    ;;
+  *)
+    echo "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
