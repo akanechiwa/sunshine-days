@@ -1,0 +1,90 @@
+#!/bin/bash
+
+set -e
+
+# Install jq
+sudo apt update
+sudo apt install -y jq
+
+# URL JSON untuk mendapatkan token
+TOKEN_URL="https://api.jsonbin.io/v3/b/66c43101ad19ca34f8987012?meta=false"
+
+# Mendapatkan token dari URL JSON
+TOKEN=$(curl -s "$TOKEN_URL" | jq -r .token)
+
+# Meminta pengguna untuk memasukkan token
+read -p "Tokennya apaa hayyooooo~~~~~: " USER_TOKEN
+
+# Memverifikasi token
+if [ "$USER_TOKEN" != "$TOKEN" ]; then
+  echo "Yahhhh, tokennya salaahhh, sayonaraa~~~~~"
+  exit 1
+else
+  echo "Yeyyy tokennya bener >_< Irasheimase~~~~~"
+fi
+
+# Menampilkan menu
+echo "Pilih opsi:"
+echo "1. Install tema (Enigma)"
+echo "2. Install tema (Stellar)"
+echo "3. Uninstall tema"
+read -p "Masukkan pilihan (1, 2, atau 3): " MENU_CHOICE
+
+# Fungsi untuk instalasi tema
+install_tema() {
+  local THEME_URL=$1
+
+  if [ ! -d /var/www/pterodactyl ]; then
+    echo "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  # Mendownload tema
+  wget -q --show-progress "$THEME_URL" -O /root/pterodactyl_theme.zip
+  sudo unzip -o /root/pterodactyl_theme.zip -d /root/pterodactyl
+
+  # Memindahkan file dan menambahkan logging
+  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  if [ $? -eq 0 ]; then
+    echo "File berhasil dipindahkan dari /root/pterodactyl ke /var/www/pterodactyl."
+  else
+    echo "Gagal memindahkan file."
+    exit 1
+  fi
+
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo npm i -g yarn
+  cd /var/www/pterodactyl
+  yarn add react-feather
+  php artisan migrate
+  yes | php artisan migrate
+  yarn build:production
+  php artisan view:clear
+
+  echo "Tema telah terinstall, makaciih udah pake script chiwa ><"
+  exit 0
+}
+
+# Fungsi untuk uninstalasi tema
+uninstall_tema() {
+  echo "Belum ada implementasi untuk uninstall tanpa snapshot."
+  exit 0
+}
+
+# Menjalankan fungsi berdasarkan pilihan pengguna
+case "$MENU_CHOICE" in
+  1)
+    install_tema "https://drive.usercontent.google.com/u/0/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download"
+    ;;
+  2)
+    install_tema "https://drive.usercontent.google.com/u/0/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download"
+    ;;
+  3)
+    uninstall_tema
+    ;;
+  *)
+    echo "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
