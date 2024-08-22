@@ -215,7 +215,7 @@ main() {
     read -rp "Silahkan pilih opsi: " choice
     case $choice in
     1)
-        LINK_GDRIVE="https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH/view?usp=drivesdk"
+        LINK_GDRIVE="https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH"
         OUTPUT_FILE="/var/www/pterodactyl/Tema-Enigma.zip"
         secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
         
@@ -228,7 +228,7 @@ main() {
         fi
         ;;
     2)
-        LINK_GDRIVE="https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c/view?usp=drivesdk"
+        LINK_GDRIVE="https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c"
         OUTPUT_FILE="/var/www/pterodactyl/Tema-Complex.zip"
         secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
         
