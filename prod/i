@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -e
+
+# Install jq and gdown
+sudo apt update
+sudo apt install -y jq gdown
+
+# URL JSON untuk mendapatkan token (dihapus sesuai permintaan)
+# TOKEN_URL="https://getpantry.cloud/apiv1/pantry/c4a7d113-85fe-48c7-a60a-6949d946f7c0/basket/themetoken"
+# Mendapatkan token dari URL JSON (dihapus sesuai permintaan)
+# TOKEN=$(curl -s "$TOKEN_URL" | jq -r .token)
+
+# Meminta pengguna untuk memasukkan token (dihapus sesuai permintaan)
+# read -p "Tokennya apaa hayyooooo~~~~~: " USER_TOKEN
+# Memverifikasi token (dihapus sesuai permintaan)
+# if [ "$USER_TOKEN" != "$TOKEN" ]; then
+#   echo "Yahhhh,tokennya salaahhh, sayonaraa~~~~~"
+#   exit 1
+# else
+#   echo "Yeyyy tokennya bener >_< Irasheimase~~~~~"
+# fi
+
+# Menampilkan menu
+echo "Pilih opsi:"
+echo "1. Install tema"
+echo "2. Uninstall tema"
+read -p "Masukkan pilihan (1 atau 2): " MENU_CHOICE
+
+# File untuk menyimpan nama snapshot (dihapus sesuai permintaan)
+# SNAPSHOT_FILE="/var/tmp/chiwa_snapshot_name"
+
+# Fungsi untuk instalasi tema
+install_tema() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    echo "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  # Mengunduh dan menginstal tema menggunakan gdown
+  gdown "https://drive.usercontent.google.com/u/0/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O ptero.zip
+  gdown "https://drive.usercontent.google.com/u/0/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip
+  
+  sudo unzip ptero.zip -d /root
+  sudo unzip enigma.zip -d /root
+
+  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo npm i -g yarn
+  cd /var/www/pterodactyl
+  yarn add react-feather
+  php artisan migrate
+  yes | php artisan migrate
+  yarn build:production
+  php artisan view:clear
+
+  echo "Tema telah terinstall, makaciih udah pake script chiwa ><"
+  exit 0
+}
+
+# Fungsi untuk uninstalasi tema (dihapus sesuai permintaan)
+# uninstall_tema() {
+#   if [ ! -f "$SNAPSHOT_FILE" ]; then
+#     echo "Anda belum menginstall tema."
+#     exit 1
+#   fi
+# 
+#   SNAPSHOT_NAME=$(cat "$SNAPSHOT_FILE")
+# 
+#   # Merestore snapshot (dihapus sesuai permintaan)
+#   sudo timeshift --restore --snapshot "$SNAPSHOT_NAME"
+# 
+#   echo "Tema telah diuninstall."
+#   exit 0
+# }
+
+# Menjalankan fungsi berdasarkan pilihan pengguna
+case "$MENU_CHOICE" in
+  1)
+    install_tema
+    ;;
+  2)
+    echo "Uninstall opsi belum diimplementasikan."
+    exit 1
+    ;;
+  *)
+    echo "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
