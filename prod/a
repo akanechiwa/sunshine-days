@@ -1,0 +1,166 @@
+#!/bin/bash
+
+# Warna dan Font
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+BOLD='\033[1m'
+
+# File log
+LOG_FILE="/root/chiwa.log"
+rm -f "$LOG_FILE"
+
+# File untuk menyimpan nama snapshot
+SNAPSHOT_FILE="/var/tmp/chiwa_snapshot_name"
+
+# Fungsi untuk memblokir Ctrl+C saat proses kritis
+block_ctrl_c() {
+    trap 'echo -e "\n${RED}Silahkan tunggu proses ini selesai...${NC}"' SIGINT
+}
+
+# Fungsi untuk mengembalikan pengaturan Ctrl+C ke default
+unblock_ctrl_c() {
+    trap - SIGINT
+}
+
+# Instalasi Font dan Dependencies
+install_fonts_and_dependencies() {
+    echo "Menginstall dependencies..."
+    sudo apt update -y >> "$LOG_FILE" 2>&1
+    sudo apt install -y toilet figlet openssl bzip2 python3-pip unzip timeshift >> "$LOG_FILE" 2>&1
+    pip3 install gdown >> "$LOG_FILE" 2>&1
+}
+
+# Fungsi untuk verifikasi ukuran layar
+verify_screen_size() {
+    local min_width=70
+    local min_height=20
+    local current_width
+    local current_height
+
+    current_width=$(tput cols)
+    current_height=$(tput lines)
+
+    if [ "$current_width" -lt "$min_width" ] || [ "$current_height" -lt "$min_height" ]; then
+        echo -e "${RED}${BOLD}Layar anda terlalu kecil. Ukuran minimum adalah ${min_width}x${min_height}.${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk menampilkan teks dengan toilet dan memberikan kredit
+show_intro() {
+    clear
+    toilet -f mono12 -F border --metal "  @akane_chiwa"
+    echo -e "${CYAN}${BOLD}pterodactylthemeautoinstaller${NC}"
+}
+
+# Meminta user untuk memasukkan token API
+request_token() {
+    echo -e "${RED}${BOLD}SILAHKAN MASUKKAN TOKEN: ${NC}"
+    read -r INPUT_TOKEN
+    if [ -z "$INPUT_TOKEN" ]; then
+        echo -e "${RED}Token tidak boleh kosong!${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk verifikasi token API dengan mencocokkan input
+verify_api() {
+    local response
+    local RETRIEVED_TOKEN
+
+    response=$(curl -s https://api.jsonbin.io/v3/b/66c43101ad19ca34f8987012?meta=false)
+    RETRIEVED_TOKEN=$(echo "$response" | jq -r '.token')
+
+    if [ "$INPUT_TOKEN" == "$RETRIEVED_TOKEN" ]; then
+        echo -e "${GREEN}VERIFIKASI BERHASIL TOKEN COCOK.${NC}"
+    else
+        echo -e "${RED}Verifikasi gagal! Token tidak cocok.${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk membuat snapshot sebelum instalasi
+create_snapshot() {
+    SNAPSHOT_NAME="chiwa_snapshot_$(date +%Y%m%d_%H%M%S)"
+    sudo timeshift --create --comments "Backup sebelum instalasi tema" --tags D --snapshot-name "$SNAPSHOT_NAME"
+    echo "$SNAPSHOT_NAME" > "$SNAPSHOT_FILE"
+}
+
+# Fungsi untuk instalasi tema
+install_tema() {
+    create_snapshot
+    LINK_GDRIVE="https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH"
+    OUTPUT_FILE="/var/www/pterodactyl/Tema-Enigma.zip"
+
+    gdown "$LINK_GDRIVE" -O "$OUTPUT_FILE" >> "$LOG_FILE" 2>&1
+
+    if unzip -t "$OUTPUT_FILE" &>/dev/null; then
+        sudo unzip -o "$OUTPUT_FILE" -d /var/www/pterodactyl >> "$LOG_FILE" 2>&1
+        sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+        curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >> "$LOG_FILE" 2>&1
+        sudo apt install -y nodejs >> "$LOG_FILE" 2>&1
+        sudo npm i -g yarn >> "$LOG_FILE" 2>&1
+        cd /var/www/pterodactyl || exit
+        yarn >> "$LOG_FILE" 2>&1
+        yarn add react-feather >> "$LOG_FILE" 2>&1
+        php artisan migrate --force >> "$LOG_FILE" 2>&1
+        yarn build:production >> "$LOG_FILE" 2>&1
+        php artisan view:clear >> "$LOG_FILE" 2>&1
+
+        echo -e "${GREEN}Tema telah terinstall.${NC}"
+    else
+        echo -e "${RED}File ZIP tidak valid.${NC}"
+        exit 1
+    fi
+}
+
+# Fungsi untuk uninstall tema dengan merestore snapshot
+uninstall_tema() {
+    if [ ! -f "$SNAPSHOT_FILE" ]; then
+        echo -e "${RED}Anda belum menginstall tema.${NC}"
+        exit 1
+    fi
+
+    SNAPSHOT_NAME=$(cat "$SNAPSHOT_FILE")
+    sudo timeshift --restore --snapshot "$SNAPSHOT_NAME" >> "$LOG_FILE" 2>&1
+
+    echo -e "${GREEN}Tema telah diuninstall.${NC}"
+}
+
+# Fungsi utama untuk mengatur eksekusi skrip
+main() {
+    block_ctrl_c
+    install_fonts_and_dependencies
+    verify_screen_size
+    show_intro
+    request_token
+    verify_api
+
+    echo -e "${CYAN}Pilih opsi:${NC}"
+    echo "1. Install tema"
+    echo "2. Uninstall tema"
+    read -rp "Masukkan pilihan (1 atau 2): " choice
+
+    case $choice in
+        1)
+            install_tema
+            ;;
+        2)
+            uninstall_tema
+            ;;
+        *)
+            echo -e "${RED}Opsi tidak valid.${NC}"
+            exit 1
+            ;;
+    esac
+
+    unblock_ctrl_c
+}
+
+# Menjalankan fungsi utama
+main
