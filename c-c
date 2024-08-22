@@ -1,5 +1,5 @@
 #!/bin/bash
-
+rm /root/chiwa.log
 # Warna dan Font
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -215,14 +215,14 @@ main() {
     read -rp "Silahkan pilih opsi: " choice
     case $choice in
         1)
-            LINK_GDRIVE="https://drive.google.com/uc?id=XXXXX&export=download"
+            LINK_GDRIVE="https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH/view?usp=drivesdk"
             OUTPUT_FILE="/var/www/pterodactyl/Tema-Enigma.zip"
             secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
             check_and_fix_zip "$OUTPUT_FILE"
             replace_placeholders_enigma
             ;;
         2)
-            LINK_GDRIVE="https://drive.google.com/uc?id=YYYYY&export=download"
+            LINK_GDRIVE="https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c/view?usp=drivesdk"
             OUTPUT_FILE="/var/www/pterodactyl/Tema-Complex.zip"
             secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
             check_and_fix_zip "$OUTPUT_FILE"
