@@ -1,1 +1,83 @@
 
+#!/bin/bash
+
+set -e
+
+# Install jq
+sudo apt update
+sudo apt install -y jq
+
+# Menampilkan menu
+echo "Pilih opsi:"
+echo "1. Install tema (Enigma)"
+echo "2. Install tema (Stellar)"
+echo "3. Uninstall tema"
+read -p "Masukkan pilihan (1, 2, atau 3): " MENU_CHOICE
+
+# Fungsi untuk instalasi tema
+install_tema() {
+  local THEME_URL=$1
+  local THEME_ZIP="/root/pterodactyl_theme.zip"
+  local TARGET_DIR="/var/www/pterodactyl"
+
+  echo "Mengunduh tema dari $THEME_URL..."
+  wget -q --show-progress "$THEME_URL" -O "$THEME_ZIP"
+  echo "File telah terdownload: $THEME_ZIP"
+
+  echo "Mengekstrak file ke /root/pterodactyl..."
+  sudo unzip -o "$THEME_ZIP" -d /root/pterodactyl
+  echo "File telah diekstrak."
+
+  # Menghapus direktori target jika sudah ada
+  if [ -d "$TARGET_DIR" ]; then
+    echo "Menghapus direktori target yang sudah ada di $TARGET_DIR..."
+    sudo rm -rf "$TARGET_DIR"
+    echo "Direktori target dihapus."
+  fi
+
+  # Memindahkan file dari /root/pterodactyl ke /var/www/pterodactyl
+  echo "Memindahkan file dari /root/pterodactyl ke $TARGET_DIR..."
+  sudo cp -rfT /root/pterodactyl "$TARGET_DIR"
+  if [ $? -eq 0 ]; then
+    echo "File berhasil dipindahkan dari /root/pterodactyl ke $TARGET_DIR."
+  else
+    echo "Gagal memindahkan file."
+    exit 1
+  fi
+
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo npm i -g yarn
+  cd "$TARGET_DIR"
+  yarn add react-feather
+  php artisan migrate
+  yes | php artisan migrate
+  yarn build:production
+  php artisan view:clear
+
+  echo "Tema telah terinstall, makaciih udah pake script chiwa ><"
+  exit 0
+}
+
+# Fungsi untuk uninstalasi tema
+uninstall_tema() {
+  echo "Belum ada implementasi untuk uninstall tanpa snapshot."
+  exit 0
+}
+
+# Menjalankan fungsi berdasarkan pilihan pengguna
+case "$MENU_CHOICE" in
+  1)
+    install_tema "https://drive.usercontent.google.com/u/0/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download"
+    ;;
+  2)
+    install_tema "https://drive.usercontent.google.com/u/0/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download"
+    ;;
+  3)
+    uninstall_tema
+    ;;
+  *)
+    echo "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
