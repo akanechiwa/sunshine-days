@@ -214,25 +214,39 @@ main() {
     echo "2. Tema Complex"
     read -rp "Silahkan pilih opsi: " choice
     case $choice in
-        1)
-            LINK_GDRIVE="https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH/view?usp=drivesdk"
-            OUTPUT_FILE="/var/www/pterodactyl/Tema-Enigma.zip"
-            secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
-            check_and_fix_zip "$OUTPUT_FILE"
+    1)
+        LINK_GDRIVE="https://drive.google.com/file/d/1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH/view?usp=drivesdk"
+        OUTPUT_FILE="/var/www/pterodactyl/Tema-Enigma.zip"
+        secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
+        
+        if check_and_fix_zip "$OUTPUT_FILE"; then
             replace_placeholders_enigma
-            ;;
-        2)
-            LINK_GDRIVE="https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c/view?usp=drivesdk"
-            OUTPUT_FILE="/var/www/pterodactyl/Tema-Complex.zip"
-            secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
-            check_and_fix_zip "$OUTPUT_FILE"
-            ;;
-        *)
-            echo -e "${RED}Opsi tidak valid!${NC}"
+        else
+            echo -e "${RED}File ZIP tidak valid atau terjadi kesalahan saat memperbaiki.${NC}"
             unblock_ctrl_c
             exit 1
-            ;;
-    esac
+        fi
+        ;;
+    2)
+        LINK_GDRIVE="https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c/view?usp=drivesdk"
+        OUTPUT_FILE="/var/www/pterodactyl/Tema-Complex.zip"
+        secure_download "$LINK_GDRIVE" "$OUTPUT_FILE"
+        
+        if check_and_fix_zip "$OUTPUT_FILE"; then
+            echo -e "${GREEN}Tema Complex berhasil diunduh dan diperbaiki.${NC}"
+        else
+            echo -e "${RED}File ZIP tidak valid atau terjadi kesalahan saat memperbaiki.${NC}"
+            unblock_ctrl_c
+            exit 1
+        fi
+        ;;
+    *)
+        echo -e "${RED}Opsi tidak valid!${NC}"
+        unblock_ctrl_c
+        exit 1
+        ;;
+esac
+
     install_theme
     unblock_ctrl_c
 }
