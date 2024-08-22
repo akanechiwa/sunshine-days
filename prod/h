@@ -50,12 +50,6 @@ install_tema() {
   rm -f "$THEME_ZIP"
   sudo rm -rf "$TEMP_DIR"
 
-  # Verifikasi file artisan
-  if [ ! -f "$TARGET_DIR/artisan" ]; then
-    echo "File artisan tidak ditemukan di $TARGET_DIR. Pastikan tema terinstal dengan benar."
-    exit 1
-  fi
-
   # Pindah ke direktori target
   echo "Pindah ke direktori $TARGET_DIR..."
   cd "$TARGET_DIR"
