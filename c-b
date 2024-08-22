@@ -209,13 +209,13 @@ main() {
 
     case $THEME_CHOICE in
         1)
-            secure_download "https://drive.google.com/uc?id=XXXX" "/var/www/pterodactyl/stellar.zip"
+            secure_download "https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c" "/var/www/pterodactyl/stellar.zip"
             check_and_fix_zip "/var/www/pterodactyl/stellar.zip"
             show_frame "Mengekstrak tema Stellar"
             sudo unzip -o "/var/www/pterodactyl/stellar.zip" -d /var/www/pterodactyl/ >> "$LOG_FILE" 2>&1
             ;;
         2)
-            secure_download "https://drive.google.com/uc?id=YYYY" "/var/www/pterodactyl/enigma.zip"
+            secure_download "https://drive.google.com/file/d/1brBpgLaTDeg0HIKEGDYnploTiemBxI_c" "/var/www/pterodactyl/enigma.zip"
             check_and_fix_zip "/var/www/pterodactyl/enigma.zip"
             show_frame "Mengekstrak tema Enigma"
             sudo unzip -o "/var/www/pterodactyl/enigma.zip" -d /var/www/pterodactyl/ >> "$LOG_FILE" 2>&1
