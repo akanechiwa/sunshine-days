@@ -48,7 +48,7 @@ install_tema_stellar() {
 
   # Melakukan langkah-langkah instalasi tema Stellar
   sudo unzip stellar.zip
-  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  sudo cp -rfT ./pterodactyl /var/www/pterodactyl
   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   sudo apt install -y nodejs
   sudo npm i -g yarn
@@ -80,7 +80,7 @@ install_tema_enigma() {
   fi
 
   # Persiapan direktori
-  prepare_directory "/var/www/pterodactyl"
+  prepare_directory "./pterodactyl"
 
   # Meminta input dari pengguna
   read -p "Masukkan link BC Bot: " LINK_BC_BOT
@@ -90,11 +90,11 @@ install_tema_enigma() {
 
   # Melakukan langkah-langkah instalasi tema Enigma
   sudo unzip enigma.zip
-  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
-  sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
-  sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
-  sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
-  sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /root/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo cp -rfT ./pterodactyl /var/www/pterodactyl
+  sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   sudo apt install -y nodejs
   sudo npm i -g yarn
