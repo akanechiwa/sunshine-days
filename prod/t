@@ -83,7 +83,7 @@ install_tema_stellar() {
   fi
 
   # Persiapan direktori
-  prepare_directory "/var/www/pterodactyl"
+  prepare_directory "./pterodactyl"
 
   # Melakukan langkah-langkah instalasi tema Stellar
   loading "Menginstall tema Stellar"
