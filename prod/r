@@ -90,11 +90,11 @@ install_tema_enigma() {
 
   # Melakukan langkah-langkah instalasi tema Enigma
   sudo unzip enigma.zip
-  sudo cp -rfT ./pterodactyl /var/www/pterodactyl
   sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
   sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
   sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
   sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" ./pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo cp -rfT ./pterodactyl /var/www/pterodactyl
   curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
   sudo apt install -y nodejs
   sudo npm i -g yarn
