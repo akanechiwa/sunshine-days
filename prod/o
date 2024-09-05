@@ -1,0 +1,104 @@
+#!/bin/bash
+
+set -e
+
+# Install jq, pip, dan gdown
+sudo apt update
+sudo apt install -y jq python3-pip
+pip3 install gdown
+
+# Menampilkan menu
+echo "Pilih tema yang ingin diinstall:"
+echo "1. Stellar"
+echo "2. Enigma"
+echo "3. Uninstall tema"
+read -p "Masukkan pilihan (1, 2 atau 3): " MENU_CHOICE
+
+# Fungsi untuk instalasi tema Stellar
+install_tema_stellar() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    echo "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  # Menginstall unzip dan mengunduh file tema Stellar
+  sudo apt update
+  sudo apt install -y unzip
+  gdown --fuzzy "https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O stellar.zip
+
+  if [ ! -f "stellar.zip" ]; then
+    echo "Download gagal, periksa link atau koneksi internet Anda."
+    exit 1
+  fi
+  
+  # Melakukan langkah-langkah instalasi tema Stellar
+  sudo unzip stellar.zip
+  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo npm i -g yarn
+  cd /var/www/pterodactyl
+  yarn add react-feather
+  php artisan migrate --force
+  yarn build:production
+  php artisan view:clear
+
+  echo "Tema Stellar telah terinstall, makaciih udah pake script chiwa ><"
+  exit 0
+}
+
+# Fungsi untuk instalasi tema Enigma
+install_tema_enigma() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    echo "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  # Menginstall unzip dan mengunduh file tema Enigma
+  sudo apt update
+  sudo apt install -y unzip
+  gdown --fuzzy "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip
+
+  if [ ! -f "enigma.zip" ]; then
+    echo "Download gagal, periksa link atau koneksi internet Anda."
+    exit 1
+  fi
+
+  # Melakukan langkah-langkah instalasi tema Enigma
+  sudo unzip enigma.zip
+  sudo cp -rfT /root/pterodactyl /var/www/pterodactyl
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+  sudo apt install -y nodejs
+  sudo npm i -g yarn
+  cd /var/www/pterodactyl
+  yarn add react-feather
+  php artisan migrate --force
+  yarn build:production
+  php artisan view:clear
+
+  echo "Tema Enigma telah terinstall, makaciih udah pake script chiwa ><"
+  exit 0
+}
+
+# Fungsi untuk uninstalasi tema
+uninstall_tema() {
+  echo "Maaf, fungsi uninstall belum diimplementasikan dalam versi ini."
+  exit 0
+}
+
+# Menjalankan fungsi berdasarkan pilihan pengguna
+case "$MENU_CHOICE" in
+  1)
+    install_tema_stellar
+    ;;
+  2)
+    install_tema_enigma
+    ;;
+  3)
+    uninstall_tema
+    ;;
+  *)
+    echo "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
