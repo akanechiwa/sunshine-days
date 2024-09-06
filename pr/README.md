@@ -1,3 +1,3 @@
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/akanechiwa/sunshine-days/main/a/
+bash <(curl -s https://raw.githubusercontent.com/akanechiwa/sunshine-days/main/pr/
 ```
