@@ -7,17 +7,20 @@ loading() {
   local animation='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
   local colors=(31 32 33 34 35 36)
   local color_index=0
+  local pid=$2  # PID dari proses latar belakang
 
   printf "\n\e[1m\e[96m╔═[%s]\n║ %s...\e[0m\n" "$(date +"%T")" "$message"
   printf "╚═"
   for ((i=0; i<${#message}+5; i++)); do printf "═"; done
   printf "\n"
   
-  for i in {1..50}; do
+  while kill -0 "$pid" 2>/dev/null; do
     printf "\r\e[1m\e[${colors[$color_index]}m ${animation:i%${#animation}:1} \e[0m${message}... "
     sleep 0.1
     color_index=$(( (color_index + 1) % ${#colors[@]} ))
   done
+
+  printf "\r\e[1m\e[92m✔ %s selesai!\e[0m\n" "$message"
 }
 
 clear_and_wait() {
@@ -39,10 +42,20 @@ print_header() {
 }
 
 clear_and_wait
-loading "Memperbarui sistem dan menginstall dependensi"
-sudo apt update -qq >/dev/null 2>&1
-sudo apt install -y jq python3-pip -qq >/dev/null 2>&1
-pip3 install gdown >/dev/null 2>&1
+loading "Memperbarui sistem dan menginstall dependensi" &
+pid=$!
+sudo apt update -qq >/dev/null 2>&1 &
+wait $pid
+
+loading "Menginstall jq dan python3-pip" &
+pid=$!
+sudo apt install -y jq python3-pip -qq >/dev/null 2>&1 &
+wait $pid
+
+loading "Menginstall gdown melalui pip3" &
+pid=$!
+pip3 install gdown >/dev/null 2>&1 &
+wait $pid
 
 print_header
 print_colored "93" "1. Stellar"
@@ -57,41 +70,65 @@ install_tema_stellar() {
     exit 1
   fi
 
-  loading "Menginstall unzip dan mengunduh tema Stellar"
-  sudo apt install -y unzip -qq >/dev/null 2>&1
-  gdown --fuzzy "https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O stellar.zip >/dev/null 2>&1
+  loading "Menginstall unzip dan mengunduh tema Stellar" &
+  pid=$!
+  sudo apt install -y unzip -qq >/dev/null 2>&1 &
+  wait $pid
+
+  loading "Mengunduh tema Stellar" &
+  pid=$!
+  gdown --fuzzy "https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O stellar.zip >/dev/null 2>&1 &
+  wait $pid
 
   if [ ! -f "stellar.zip" ]; then
     print_colored "91" "Download gagal, periksa link atau koneksi internet Anda."
     exit 1
   fi
 
-  loading "Meng-unzip file tema Stellar"
-  sudo unzip -o stellar.zip -d /var/www >/dev/null 2>&1
+  loading "Meng-unzip file tema Stellar" &
+  pid=$!
+  sudo unzip -o stellar.zip -d /var/www >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Mengubah direktori ke /var/www/pterodactyl"
-  cd /var/www/pterodactyl
+  loading "Mengubah direktori ke /var/www/pterodactyl" &
+  pid=$!
+  cd /var/www/pterodactyl &
+  wait $pid
 
-  loading "Menambahkan repository NodeSource untuk Node.js"
-  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+  loading "Menambahkan repository NodeSource untuk Node.js" &
+  pid=$!
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Menginstall Node.js"
-  sudo apt install -y nodejs -qq >/dev/null 2>&1
+  loading "Menginstall Node.js" &
+  pid=$!
+  sudo apt install -y nodejs -qq >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Menginstall Yarn secara global"
-  sudo npm i -g yarn >/dev/null 2>&1
+  loading "Menginstall Yarn secara global" &
+  pid=$!
+  sudo npm i -g yarn >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Menginstall dependensi react-feather"
-  yarn add react-feather >/dev/null 2>&1
+  loading "Menginstall dependensi react-feather" &
+  pid=$!
+  yarn add react-feather >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Melakukan migrasi database Laravel"
-  php artisan migrate --force >/dev/null 2>&1
+  loading "Melakukan migrasi database Laravel" &
+  pid=$!
+  php artisan migrate --force >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Membuat build produksi untuk aplikasi frontend"
-  yarn build:production >/dev/null 2>&1
+  loading "Membuat build produksi untuk aplikasi frontend" &
+  pid=$!
+  yarn build:production >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Membersihkan cache tampilan Laravel"
-  php artisan view:clear >/dev/null 2>&1
+  loading "Membersihkan cache tampilan Laravel" &
+  pid=$!
+  php artisan view:clear >/dev/null 2>&1 &
+  wait $pid
 
   print_colored "92" "Tema Stellar telah terinstall, makaciih udah pake script Chiwa ><"
   exit 0
@@ -103,9 +140,15 @@ install_tema_enigma() {
     exit 1
   fi
 
-  loading "Menginstall unzip dan mengunduh tema Enigma"
-  sudo apt install -y unzip -qq >/dev/null 2>&1
-  gdown --fuzzy "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip >/dev/null 2>&1
+  loading "Menginstall unzip dan mengunduh tema Enigma" &
+  pid=$!
+  sudo apt install -y unzip -qq >/dev/null 2>&1 &
+  wait $pid
+
+  loading "Mengunduh tema Enigma" &
+  pid=$!
+  gdown --fuzzy "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip >/dev/null 2>&1 &
+  wait $pid
 
   if [ ! -f "enigma.zip" ]; then
     print_colored "91" "Download gagal, periksa link atau koneksi internet Anda."
@@ -117,42 +160,63 @@ install_tema_enigma() {
   read -p "Masukkan link GC Info: " LINK_GC_INFO
   read -p "Masukkan linktree kalian: " LINKTREE_KALIAN
 
-  loading "Meng-unzip file tema Enigma"
-  sudo unzip -o enigma.zip -d /var/www >/dev/null 2>&1
+  loading "Meng-unzip file tema Enigma" &
+  pid=$!
+  sudo unzip -o enigma.zip -d /var/www >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Mengganti variabel dalam file Enigma"
-  sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
-  sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
-  sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
-  sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  loading "Mengganti variabel dalam file Enigma" &
+  pid=$!
+  sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx &
+  sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx &
+  sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx &
+  sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx &
+  wait $pid
 
-  loading "Mengubah direktori ke /var/www/pterodactyl"
-  cd /var/www/pterodactyl
+  loading "Mengubah direktori ke /var/www/pterodactyl" &
+  pid=$!
+  cd /var/www/pterodactyl &
+  wait $pid
 
-  loading "Menambahkan repository NodeSource untuk Node.js"
-  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+  loading "Menambahkan repository NodeSource untuk Node.js" &
+  pid=$!
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Menginstall Node.js"
-  sudo apt install -y nodejs -qq >/dev/null 2>&1
+  loading "Menginstall Node.js" &
+  pid=$!
+  sudo apt install -y nodejs -qq >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Menginstall Yarn secara global"
-  sudo npm i -g yarn >/dev/null 2>&1
+  loading "Menginstall Yarn secara global" &
+  pid=$!
+  sudo npm i -g yarn >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Menginstall dependensi react-feather"
-  yarn add react-feather >/dev/null 2>&1
+  loading "Menginstall dependensi react-feather" &
+  pid=$!
+  yarn add react-feather >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Melakukan migrasi database Laravel"
-  php artisan migrate --force >/dev/null 2>&1
+  loading "Melakukan migrasi database Laravel" &
+  pid=$!
+  php artisan migrate --force >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Membuat build produksi untuk aplikasi frontend"
-  yarn build:production >/dev/null 2>&1
+  loading "Membuat build produksi untuk aplikasi frontend" &
+  pid=$!
+  yarn build:production >/dev/null 2>&1 &
+  wait $pid
 
-  loading "Membersihkan cache tampilan Laravel"
-  php artisan view:clear >/dev/null 2>&1
+  loading "Membersihkan cache tampilan Laravel" &
+  pid=$!
+  php artisan view:clear >/dev/null 2>&1 &
+  wait $pid
 
   print_colored "92" "Tema Enigma telah terinstall, makaciih udah pake script Chiwa ><"
   exit 0
 }
+
 uninstall_tema() {
   print_colored "91" "Maaf, fungsi uninstall belum diimplementasikan dalam versi ini."
   exit 0
@@ -169,7 +233,6 @@ case "$MENU_CHOICE" in
     uninstall_tema
     ;;
   *)
-    print_colored "91" "Pilihan tidak valid, keluar dari skrip."
-    exit 1
+    print_colored "91" "Pilihan tidak valid!"
     ;;
 esac
