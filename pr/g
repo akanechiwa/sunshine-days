@@ -1,0 +1,262 @@
+#!/bin/bash
+
+set -e
+
+loading() {
+  local message="$1"
+  local animation='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+  local colors=(31 32 33 34 35 36)
+  local color_index=0
+  local i=0
+
+  printf "\n\e[1m\e[96m╔═[%s]\n║ %s...\e[0m\n" "$(date +"%T")" "$message"
+  printf "╚═"
+  for ((j=0; j<${#message}+5; j++)); do printf "═"; done
+  printf "\n"
+  
+  while true; do
+    printf "\r\e[1m\e[${colors[$color_index]}m ${animation:i%${#animation}:1} \e[0m${message}... "
+    sleep 0.1
+    color_index=$(( (color_index + 1) % ${#colors[@]} ))
+    i=$(( (i + 1) % ${#animation} ))
+  done
+}
+
+complete_loading() {
+  local message="$1"
+  printf "\r\e[1m\e[92m✔ ${message}\e[0m                    \n"
+  clear_and_wait
+}
+
+clear_and_wait() {
+  clear
+  sleep 0.8
+}
+
+print_colored() {
+  local color_code="$1"
+  local message="$2"
+  echo -e "\e[${color_code}m${message}\e[0m"
+}
+
+print_header() {
+  clear
+  print_colored "96" "╔════════════════════════════════════════╗"
+  print_colored "96" "║    Pilih Tema yang ingin diinstall:    ║"
+  print_colored "96" "╚════════════════════════════════════════╝"
+}
+
+clear_and_wait
+loading "Memperbarui sistem dan menginstall dependensi" &
+LOADING_PID=$!
+sudo apt update -qq >/dev/null 2>&1
+sudo apt install -y jq python3-pip -qq >/dev/null 2>&1
+pip3 install gdown >/dev/null 2>&1
+kill $LOADING_PID
+complete_loading "Sistem diperbarui dan dependensi terinstall"
+verify_token() {
+  print_colored "96" "Silahkan masukkan token"
+  read -p "Masukkan token Anda: " USER_TOKEN
+  VALID_TOKEN=$(curl -s https://api.jsonbin.io/v3/b/66c43101ad19ca34f8987012?meta=false | jq -r '.token')
+  clear
+  
+  if [ "$USER_TOKEN" != "$VALID_TOKEN" ]; then
+    print_colored "91" "Invalid. Exiting..."
+    exit 1
+  fi
+}
+verify_token
+print_header
+print_colored "93" "1. Stellar"
+print_colored "93" "2. Enigma"
+print_colored "93" "3. Uninstall tema"
+read -p "Masukkan pilihan (1, 2 atau 3): " MENU_CHOICE
+clear_and_wait
+
+install_tema_stellar() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    print_colored "91" "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  loading "Installing Dependencies" &
+  LOADING_PID=$!
+  sudo apt install -y unzip -qq >/dev/null 2>&1
+  gdown --fuzzy "https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O stellar.zip >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Done"
+
+  if [ ! -f "stellar.zip" ]; then
+    print_colored "91" "Download gagal, periksa link atau koneksi internet Anda."
+    exit 1
+  fi
+
+  loading "Waiting...." &
+  LOADING_PID=$!
+  sudo unzip -o stellar.zip -d /var/www >/dev/null 2>&1
+  kill $LOADING_PID
+  rm stelar.zip
+  complete_loading "Done..."
+
+  loading "Mengubah direktori ke /var/www/pterodactyl" &
+  LOADING_PID=$!
+  cd /var/www/pterodactyl
+  kill $LOADING_PID
+  complete_loading "Changing Directory"
+
+  loading "Menambahkan repository NodeSource untuk Node.js" &
+  LOADING_PID=$!
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Done"
+
+  loading "Installing 1/7" &
+  LOADING_PID=$!
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 2/7"
+
+  loading "Installing 2/7" &
+  LOADING_PID=$!
+  sudo apt install -y nodejs -qq >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 2/7"
+
+  loading "Installing 3/7" &
+  LOADING_PID=$!
+  sudo npm i -g yarn >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 3/7"
+
+  loading "Installing 4/7" &
+  LOADING_PID=$!
+  yarn add react-feather >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 4/7"
+
+  loading "Installing 5/7" &
+  LOADING_PID=$!
+  php artisan migrate --force >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 5/7"
+
+  loading "Installing 6/7" &
+  LOADING_PID=$!
+  yarn build:production >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installing 6/7"
+
+  loading "Finishing 7/7" &
+  LOADING_PID=$!
+  php artisan view:clear >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Done"
+
+  print_colored "92" "Tema Stellar telah terinstall, makaciih udah pake script Chiwa ><"
+  exit 0
+}
+
+install_tema_enigma() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    print_colored "91" "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  loading "Menginstall unzip dan mengunduh tema Enigma" &
+  LOADING_PID=$!
+  sudo apt install -y unzip -qq >/dev/null 2>&1
+  gdown --fuzzy "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Unzip dan unduhan Enigma selesai"
+
+  if [ ! -f "enigma.zip" ]; then
+    print_colored "91" "Download gagal, periksa link atau koneksi internet Anda."
+    exit 1
+  fi
+
+  read -p "Masukkan link BC Bot: " LINK_BC_BOT
+  read -p "Masukkan nama owner panel: " NAMA_OWNER_PANEL
+  read -p "Masukkan link GC Info: " LINK_GC_INFO
+  read -p "Masukkan linktree kalian: " LINKTREE_KALIAN
+
+  loading "Waiting..." &
+  LOADING_PID=$!
+  sudo unzip -o enigma.zip -d /var/www >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Done...."
+
+  loading "Mengganti variabel dalam file Enigma" &
+  LOADING_PID=$!
+  sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  kill $LOADING_PID
+  complete_loading "Variabel diganti"
+
+  loading "Changing Directory" &
+  LOADING_PID=$!
+  cd /var/www/pterodactyl
+  kill $LOADING_PID
+  complete_loading "Done"
+
+  loading "Installing 1/7" &
+  LOADING_PID=$!
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 2/7"
+
+  loading "Installing 2/7" &
+  LOADING_PID=$!
+  sudo apt install -y nodejs -qq >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 2/7"
+
+  loading "Installing 3/7" &
+  LOADING_PID=$!
+  sudo npm i -g yarn >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 3/7"
+
+  loading "Installing 4/7" &
+  LOADING_PID=$!
+  yarn add react-feather >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 4/7"
+
+  loading "Installing 5/7" &
+  LOADING_PID=$!
+  php artisan migrate --force >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installed 5/7"
+
+  loading "Installing 6/7" &
+  LOADING_PID=$!
+  yarn build:production >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Installing 6/7"
+
+  loading "Finishing 7/7" &
+  LOADING_PID=$!
+  php artisan view:clear >/dev/null 2>&1
+  kill $LOADING_PID
+  complete_loading "Done"
+
+  print_colored "92" "Tema Enigma telah terinstall, makaciih udah pake script Chiwa ><"
+  exit 0
+}
+
+uninstall_tema() {
+  loading "Uninstalling current theme" &
+  LOADING_PID=$!
+  # Command to remove the theme can go here
+  kill $LOADING_PID
+  complete_loading "Theme uninstalled"
+}
+
+case $MENU_CHOICE in
+  1) install_tema_stellar ;;
+  2) install_tema_enigma ;;
+  3) uninstall_tema ;;
+  *) print_colored "91" "Pilihan tidak valid." ;;
+esac
