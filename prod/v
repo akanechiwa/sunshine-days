@@ -1,0 +1,172 @@
+#!/bin/bash
+
+set -e
+
+loading() {
+  local message="$1"
+  local animation='|/-\'
+  printf "["
+  for ((i=0; i<${#message}+6; i++)); do printf "-"; done
+  printf "]\n"
+  for i in {1..20}; do
+    printf "\r ${animation:i%${#animation}:1} ${message}... "
+    sleep 0.08
+  done
+  printf "\r ✔ ${message} selesai!             \n"
+  sleep 0.8
+}
+
+clear_and_wait() {
+  clear
+  sleep 0.8
+}
+
+print_colored() {
+  local color_code="$1"
+  local message="$2"
+  echo -e "\e[${color_code}m${message}\e[0m"
+}
+
+print_header() {
+  clear
+  print_colored "96" "╔════════════════════════════════════════╗"
+  print_colored "96" "║    Pilih Tema yang ingin diinstall:    ║"
+  print_colored "96" "╚════════════════════════════════════════╝"
+}
+
+clear_and_wait
+loading "Memperbarui sistem dan menginstall dependensi"
+sudo apt update -qq >/dev/null 2>&1
+sudo apt install -y jq python3-pip -qq >/dev/null 2>&1
+pip3 install gdown >/dev/null 2>&1
+
+print_header
+print_colored "93" "1. Stellar"
+print_colored "93" "2. Enigma"
+print_colored "93" "3. Uninstall tema"
+read -p "Masukkan pilihan (1, 2 atau 3): " MENU_CHOICE
+clear_and_wait
+
+install_tema_stellar() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    print_colored "91" "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  loading "Menginstall unzip dan mengunduh tema Stellar"
+  sudo apt install -y unzip -qq >/dev/null 2>&1
+  gdown --fuzzy "https://drive.google.com/uc?id=1brBpgLaTDeg0HIKEGDYnploTiemBxI_c&export=download" -O stellar.zip >/dev/null 2>&1
+
+  if [ ! -f "stellar.zip" ]; then
+    print_colored "91" "Download gagal, periksa link atau koneksi internet Anda."
+    exit 1
+  fi
+
+  loading "Meng-unzip file tema Stellar"
+  sudo unzip stellar.zip -d /var/www >/dev/null 2>&1
+
+  loading "Mengubah direktori ke /var/www/pterodactyl"
+  cd /var/www/pterodactyl
+
+  loading "Menambahkan repository NodeSource untuk Node.js"
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+
+  loading "Menginstall Node.js"
+  sudo apt install -y nodejs -qq >/dev/null 2>&1
+
+  loading "Menginstall Yarn secara global"
+  sudo npm i -g yarn >/dev/null 2>&1
+
+  loading "Menginstall dependensi react-feather"
+  yarn add react-feather >/dev/null 2>&1
+
+  loading "Melakukan migrasi database Laravel"
+  php artisan migrate --force >/dev/null 2>&1
+
+  loading "Membuat build produksi untuk aplikasi frontend"
+  yarn build:production >/dev/null 2>&1
+
+  loading "Membersihkan cache tampilan Laravel"
+  php artisan view:clear >/dev/null 2>&1
+
+  print_colored "92" "Tema Stellar telah terinstall, makaciih udah pake script Chiwa ><"
+  exit 0
+}
+
+install_tema_enigma() {
+  if [ ! -d /var/www/pterodactyl ]; then
+    print_colored "91" "Silahkan install panel terlebih dahulu."
+    exit 1
+  fi
+
+  loading "Menginstall unzip dan mengunduh tema Enigma"
+  sudo apt install -y unzip -qq >/dev/null 2>&1
+  gdown --fuzzy "https://drive.google.com/uc?id=1FECuDNqTw5NDKxoQJDvcDbPaQ9xXitPH&export=download" -O enigma.zip >/dev/null 2>&1
+
+  if [ ! -f "enigma.zip" ]; then
+    print_colored "91" "Download gagal, periksa link atau koneksi internet Anda."
+    exit 1
+  fi
+
+  read -p "Masukkan link BC Bot: " LINK_BC_BOT
+  read -p "Masukkan nama owner panel: " NAMA_OWNER_PANEL
+  read -p "Masukkan link GC Info: " LINK_GC_INFO
+  read -p "Masukkan linktree kalian: " LINKTREE_KALIAN
+
+  loading "Meng-unzip file tema Enigma"
+  sudo unzip enigma.zip -d /var/www >/dev/null 2>&1
+
+  loading "Mengganti variabel dalam file Enigma"
+  sudo sed -i "s|LINK_BC_BOT|$LINK_BC_BOT|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|NAMA_OWNER_PANEL|$NAMA_OWNER_PANEL|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|LINK_GC_INFO|$LINK_GC_INFO|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+  sudo sed -i "s|LINKTREE_KALIAN|$LINKTREE_KALIAN|g" /var/www/pterodactyl/resources/scripts/components/dashboard/DashboardContainer.tsx
+
+  loading "Mengubah direktori ke /var/www/pterodactyl"
+  cd /var/www/pterodactyl
+
+  loading "Menambahkan repository NodeSource untuk Node.js"
+  curl -sL https://deb.nodesource.com/setup_16.x | sudo -E bash - >/dev/null 2>&1
+
+  loading "Menginstall Node.js"
+  sudo apt install -y nodejs -qq >/dev/null 2>&1
+
+  loading "Menginstall Yarn secara global"
+  sudo npm i -g yarn >/dev/null 2>&1
+
+  loading "Menginstall dependensi react-feather"
+  yarn add react-feather >/dev/null 2>&1
+
+  loading "Melakukan migrasi database Laravel"
+  php artisan migrate --force >/dev/null 2>&1
+
+  loading "Membuat build produksi untuk aplikasi frontend"
+  yarn build:production >/dev/null 2>&1
+
+  loading "Membersihkan cache tampilan Laravel"
+  php artisan view:clear >/dev/null 2>&1
+
+  print_colored "92" "Tema Enigma telah terinstall, makaciih udah pake script Chiwa ><"
+  exit 0
+}
+
+uninstall_tema() {
+  print_colored "91" "Maaf, fungsi uninstall belum diimplementasikan dalam versi ini."
+  exit 0
+}
+
+case "$MENU_CHOICE" in
+  1)
+    install_tema_stellar
+    ;;
+  2)
+    install_tema_enigma
+    ;;
+  3)
+    uninstall_tema
+    ;;
+  *)
+    print_colored "91" "Pilihan tidak valid, keluar dari skrip."
+    exit 1
+    ;;
+esac
